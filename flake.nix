@@ -2,7 +2,10 @@
     description = "A empty dev env flake";
 
     inputs = {
-        nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+
+        nixpkgs-stable.url = "github:NixOS/nixpkgs";
+        nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
+
         flake-utils.url = "github:numtide/flake-utils";
 
         # Core pyproject-nix ecosystem tools
@@ -11,17 +14,17 @@
         pyproject-build-systems.url = "github:pyproject-nix/build-system-pkgs";
 
         # Ensure consistent dependencies between these tools
-        pyproject-nix.inputs.nixpkgs.follows = "nixpkgs";
-        uv2nix.inputs.nixpkgs.follows = "nixpkgs";
-        pyproject-build-systems.inputs.nixpkgs.follows = "nixpkgs";
+        pyproject-nix.inputs.nixpkgs.follows = "nixpkgs-unstable";
+        uv2nix.inputs.nixpkgs.follows = "nixpkgs-unstable";
+        pyproject-build-systems.inputs.nixpkgs.follows = "nixpkgs-unstable";
         uv2nix.inputs.pyproject-nix.follows = "pyproject-nix";
         pyproject-build-systems.inputs.pyproject-nix.follows = "pyproject-nix";
     };
 
-    outputs = { self, nixpkgs, flake-utils, uv2nix, pyproject-nix, pyproject-build-systems, ... }:
+    outputs = { self, nixpkgs-stable, nixpkgs-unstable, flake-utils, uv2nix, pyproject-nix, pyproject-build-systems, ... }:
         flake-utils.lib.eachDefaultSystem (system:
             let
-                pkgs = import nixpkgs { 
+                pkgs = import nixpkgs-unstable { 
                     inherit system; 
                     config = {
                         allowUnfree = true;
@@ -62,7 +65,7 @@
                 # Compose overlays into pythonSet
                 pythonSet = (
                     pkgs.callPackage pyproject-nix.build.packages { inherit python; }
-                ).overrideScope (nixpkgs.lib.composeManyExtensions [
+                ).overrideScope (nixpkgs-unstable.lib.composeManyExtensions [
                     pyproject-build-systems.overlays.default
                     uvLockedOverlay
                     tbbOverlay

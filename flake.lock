@@ -18,7 +18,22 @@
         "type": "github"
       }
     },
-    "nixpkgs": {
+    "nixpkgs-stable": {
+      "locked": {
+        "lastModified": 1761567207,
+        "narHash": "sha256-KTNt6Uiw34xAETj3GFEL05xC5HChW2py/9PTnTBTong=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "55f9ab9e87f5e2822e9e5e6ef64ab72aabc63085",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs-unstable": {
       "locked": {
         "lastModified": 1761373498,
         "narHash": "sha256-Q/uhWNvd7V7k1H1ZPMy/vkx3F8C13ZcdrKjO7Jv7v0c=",
@@ -37,7 +52,7 @@
     "pyproject-build-systems": {
       "inputs": {
         "nixpkgs": [
-          "nixpkgs"
+          "nixpkgs-unstable"
         ],
         "pyproject-nix": [
           "pyproject-nix"
@@ -61,7 +76,7 @@
     "pyproject-nix": {
       "inputs": {
         "nixpkgs": [
-          "nixpkgs"
+          "nixpkgs-unstable"
         ]
       },
       "locked": {
@@ -81,7 +96,8 @@
     "root": {
       "inputs": {
         "flake-utils": "flake-utils",
-        "nixpkgs": "nixpkgs",
+        "nixpkgs-stable": "nixpkgs-stable",
+        "nixpkgs-unstable": "nixpkgs-unstable",
         "pyproject-build-systems": "pyproject-build-systems",
         "pyproject-nix": "pyproject-nix",
         "uv2nix": "uv2nix_2"
@@ -130,7 +146,7 @@
     "uv2nix_2": {
       "inputs": {
         "nixpkgs": [
-          "nixpkgs"
+          "nixpkgs-unstable"
         ],
         "pyproject-nix": [
           "pyproject-nix"
