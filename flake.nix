@@ -100,8 +100,7 @@
                     ];
                     installPhase = ''
                         mkdir -p $out/bin
-                        makeWrapper ${appPythonEnv}/bin/python $out/bin/${thisProjectAsNixPkg.pname} \
-                        --add-flags $out/bin/${thisProjectAsNixPkg.pname}-script
+                        makeWrapper ${appPythonEnv}/bin/cube $out/bin/${thisProjectAsNixPkg.pname}
                     '';
                 };
 
