@@ -1,6 +1,9 @@
 import sys
 import time
 
+from sentence_transformers import SentenceTransformer, util
+from bertopic import BERTopic
+
 
 def cube():
     w, h, out = 80, 24, sys.stdout

@@ -2,22 +2,20 @@
     description = "A empty dev env flake";
 
     inputs = {
-
-        nixpkgs-stable.url = "github:NixOS/nixpkgs";
-        nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
-
-        flake-utils.url = "github:numtide/flake-utils";
+        nixpkgs-stable.url                                   = "github:NixOS/nixpkgs";
+        nixpkgs-unstable.url                                 = "github:NixOS/nixpkgs/nixos-unstable";
+        flake-utils.url                                      = "github:numtide/flake-utils";
 
         # Core pyproject-nix ecosystem tools
-        pyproject-nix.url = "github:pyproject-nix/pyproject.nix";
-        uv2nix.url = "github:pyproject-nix/uv2nix";
-        pyproject-build-systems.url = "github:pyproject-nix/build-system-pkgs";
+        pyproject-nix.url                                    = "github:pyproject-nix/pyproject.nix";
+        uv2nix.url                                           = "github:pyproject-nix/uv2nix";
+        pyproject-build-systems.url                          = "github:pyproject-nix/build-system-pkgs";
 
         # Ensure consistent dependencies between these tools
-        pyproject-nix.inputs.nixpkgs.follows = "nixpkgs-unstable";
-        uv2nix.inputs.nixpkgs.follows = "nixpkgs-unstable";
-        pyproject-build-systems.inputs.nixpkgs.follows = "nixpkgs-unstable";
-        uv2nix.inputs.pyproject-nix.follows = "pyproject-nix";
+        pyproject-nix.inputs.nixpkgs.follows                 = "nixpkgs-unstable";
+        uv2nix.inputs.nixpkgs.follows                        = "nixpkgs-unstable";
+        pyproject-build-systems.inputs.nixpkgs.follows       = "nixpkgs-unstable";
+        uv2nix.inputs.pyproject-nix.follows                  = "pyproject-nix";
         pyproject-build-systems.inputs.pyproject-nix.follows = "pyproject-nix";
     };
 
@@ -42,6 +40,8 @@
                     sourcePreference = "wheel";
                 };
 
+                # Make sure that the tbb package is available as a project dependency 
+                # via an overlay
                 tbbOverlay = final: prev: {
                     numba = prev.numba.overrideAttrs (old: {
                         buildInputs = (old.buildInputs or []) ++ [ pkgs.tbb ];
@@ -49,10 +49,12 @@
                     });
                 };
 
+                # Use a pre-packaged torch as a dependency
                 torchOverlay = final: prev: {
                     torch = pkgs.libtorch-bin;
                 };
 
+                # Resolve file name collisions between dependencies by removing duplicate files
                 collisionPatchOverlay = final: prev: {
                     choreographer = prev.choreographer.overrideAttrs (old: {
                         postInstall = (old.postInstall or "") + ''
@@ -81,9 +83,9 @@
                 appPythonEnv = pythonSet.mkVirtualEnv
                     (thisProjectAsNixPkg.pname + "-env")
                     workspace.deps.default;
-
             in
             {
+                # Development enviroment
                 devShells.default = pkgs.mkShell {
                     packages = [ 
                         appPythonEnv
@@ -91,6 +93,7 @@
                     ];
                 };
 
+                # Packaging the project via Nix and uv2nix
                 packages.default = pkgs.stdenv.mkDerivation {
                     pname = thisProjectAsNixPkg.pname;
                     version = thisProjectAsNixPkg.version;
