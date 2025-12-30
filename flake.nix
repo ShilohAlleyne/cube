@@ -1,5 +1,5 @@
 {
-    description = "A empty dev env flake";
+    description = "An example flake packaging a Python application with uv2nix";
 
     inputs = {
         nixpkgs-stable.url                                   = "github:NixOS/nixpkgs";

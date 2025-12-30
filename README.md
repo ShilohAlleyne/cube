@@ -32,6 +32,84 @@ cube is simple python project used to showcase how to package python application
 - Installable without Rust or Python via curl or pip.
 - Supports macOS, Linux, and Windows.
 
+### Creating projects with UV
+
+To create a project with `uv` the command: `uv init foo`, where `foo` is the name of the project. It will create the following directory structure:
+
+```bash
+[nix-shell:~/code/python/test]$ tree
+.
+├── README.md
+├── hello.py
+└── pyproject.toml
+```
+
+The project will include a `pyproject.toml`, a sample file `main.py` and a readme and python version pin. A further `uv.lock` file will be generated upon running the script for the first time, which will pin the dependencies of the projects to specific versions. This structure is sufficient for most scripts which simply needs to pass around a locked set of dependencies to ensure reproducibility. The `pyproject.toml` includes the metadata of the project, including the projects listed dependencies. However, it is not a build system and it alone will not install any packages to the environment.
+
+```pyproject.toml
+[project]
+name = "test"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+```
+
+If the project is intended to be packaged as an application then the command `uv init --package foo` can be used. This generates the following directory structure. 
+
+```bash
+[nix-shell:~/code/python/test]$ tree
+.
+├── README.md
+├── pyproject.toml
+└── src
+    └── test
+        └── __init__.py
+```
+
+Here the source code for the package is moved into the `src` directory, with a module system and `__init__.py`. In the projects `pyproject.toml`, a build system is also defined allowing for the package to be installed into the environment.
+
+```pyproject.toml
+[project]
+name = "test"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "ShilohAlleyne", email = "ShilohAlleyne@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = []
+
+[project.scripts]
+test = "test:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+```
+
+A command section is also included, which can be executed using `uv run`
+
+### Inline dependencies with UV
+
+With `uv` it is also possible to inline dependencies as a comment header for a simple script, by wrapping the `uv` declaration in `/// script`. For example:
+
+```python
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#   "pandas",
+#   "plotly",
+#   "Kaleido",
+# ]
+# ///
+```
+
+Imports `pandas`, `plotly` and `Kaleido` which can then be accessed in the script when it is ran using `uv run`. Running a script with inline dependencies still generates a `uv.lock` file which maintains reproducibility.
+
 UV documentation can be found here: [uv](https://docs.astral.sh/uv/#projects)
 
 ## nix
@@ -224,3 +302,43 @@ in
 Here we define overlays, which extend the nix package set allowing for all of the project dependencies to resolve.
 - They can be thought of as declarative patches
 - We define each overlay before collecting them into a set, `pythonSet`, and applying them together (in order) 
+
+## Alternatives to packaging with Nix
+
+While packaging an installation with Nix allows for easy distribution on systems with Nix there are also alternatives.
+
+### UV + nix-shells
+
+One option to manage dependencies for a project is to allow `uv` to manage the python dependencies and allow nix to manage any external packages that are needed on the path for projects via a `nix-shell`. This is the simplest why to have declarative environments. UV ensures that a Given projects python dependencies are locked and Nix allows for the external dependencies such as chromium to also be declaratively version-pinned and available on system path. This allows a projects `flake.nix` to be very simple.
+
+```nix
+{
+    description = "A simple dev env flake";
+
+    inputs = {
+        nixpkgs-stable.url   = "github:NixOS/nixpkgs";
+        nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable"; 
+    };
+
+    Outputs = { self, core }:
+    let
+        system        = "x86_64-linux";
+        pkgs-stable   = core.packages.${system}.pkgs-stable;
+        pkgs-unstable = core.packages.${system}.pkgs-unstable;
+    in
+    {
+        devShells.${system}.default = pkgs-stable.mkShell {
+            packages = [
+                pkgs-stable.chromium
+                # Other nessary package exposed to path
+            ];
+        };
+    };
+}
+```
+
+A project's `flake.nix` can still expose a dev shell as part of its outputs, allow for the environments of different projects to be collected and re-exposed in a aggregate flake. For simple scripts, inline `uv` dependencies coupled with a flake exposing non python dependencies is a very lightweight solution to dependency management. 
+
+### Docker
+
+Docker, is a containerisation platform. Containerization allows for applications and their dependencies to be isolated. Each container contains everything need for the application to run, including the application’s code/binary, its required libraries and configuration file. Docker containers all share the kernel on the host machine, but isolate the filesystem, networking and application processes. Docker much like Nix, is the only requirement to run a Docker image of an application. 
